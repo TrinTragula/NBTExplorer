@@ -1,4 +1,4 @@
-# NBTParser
+# NBTParser ![minecraft knowledge book](knowledge_book.png?raw=true)
 
 A library written in **C#** to parse **NBT** binary data, the format used by Minecraft in its ".dat" files to store game data. See [here](https://minecraft.gamepedia.com/NBT_format) for more details about the format specifications.
  
