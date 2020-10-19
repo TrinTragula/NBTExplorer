@@ -10,6 +10,7 @@ namespace NBTParser
     {
         private static Dictionary<TagType, Func<GZipStream, string, long, ITag>> tagFuncDict = new Dictionary<TagType, Func<GZipStream, string, long, ITag>>()
         {
+            { TagType.TAG_End, GetTagNull },
             { TagType.TAG_Byte, GetTagByte },
             { TagType.TAG_Short, GetTagShort },
             { TagType.TAG_Int, GetTagInt },
@@ -18,9 +19,15 @@ namespace NBTParser
             { TagType.TAG_Double, GetTagDouble },
             { TagType.TAG_Byte_Array, GetTagByteArray },
             { TagType.TAG_String, GetTagString },
+            { TagType.TAG_List, GetTagList },
             { TagType.TAG_Compound, GetTagCompound },
             { TagType.TAG_Int_Array, GetTagIntArray },
             { TagType.TAG_Long_Array, GetTagLongArray }
+        };
+
+        private static TagType[] primitiveTags = new TagType[]
+        {
+            TagType.TAG_End, TagType.TAG_Byte, TagType.TAG_Short, TagType.TAG_Int, TagType.TAG_Long, TagType.TAG_Float, TagType.TAG_Double, TagType.TAG_String
         };
 
         /// <summary>
@@ -54,60 +61,26 @@ namespace NBTParser
             Console.WriteLine($"{String.Concat(Enumerable.Repeat("\t", (int)depth))} Type: {type} Name: {name}");
 
             ITag tag = null;
-            switch (type)
+            if (tagFuncDict.ContainsKey(type))
             {
-                case TagType.TAG_End:
-                    tag = new TagEnd();
-                    break;
-                case TagType.TAG_Byte:
-                    tag = GetTagByte(stream, name, depth);
-                    break;
-                case TagType.TAG_Short:
-                    tag = GetTagShort(stream, name, depth);
-                    break;
-                case TagType.TAG_Int:
-                    tag = GetTagInt(stream, name, depth);
-                    break;
-                case TagType.TAG_Long:
-                    tag = GetTagLong(stream, name, depth);
-                    break;
-                case TagType.TAG_Float:
-                    tag = GetTagFloat(stream, name, depth);
-                    break;
-                case TagType.TAG_Double:
-                    tag = GetTagDouble(stream, name, depth);
-                    break;
-                case TagType.TAG_Byte_Array:
-                    tag = GetTagByteArray(stream, name, depth);
-                    break;
-                case TagType.TAG_String:
-                    tag = GetTagString(stream, name, depth);
-                    break;
-                case TagType.TAG_List:
-                    tag = GetTagList(stream, name, depth);
-                    break;
-                case TagType.TAG_Compound:
-                    tag = GetTagCompound(stream, name, depth);
-                    break;
-                case TagType.TAG_Int_Array:
-                    tag = GetTagIntArray(stream, name, depth);
-                    break;
-                case TagType.TAG_Long_Array:
-                    tag = GetTagLongArray(stream, name, depth);
-                    break;
-                default:
-                    // Should never happen
-                    break;
+                tag = tagFuncDict[type](stream, name, depth);
             }
 
-            if (tag.Type != TagType.TAG_Int_Array && tag.Type != TagType.TAG_Long_Array
-                && tag.Type != TagType.TAG_Byte_Array && tag.Type != TagType.TAG_Compound
-                && tag.Type != TagType.TAG_List)
+            if (primitiveTags.Contains(tag.Type))
             {
                 Console.WriteLine($"{String.Concat(Enumerable.Repeat("\t", (int)depth))} Payload: {tag.PayloadGeneric}");
             }
 
             return tag;
+        }
+
+        private static TagEnd GetTagNull(GZipStream stream, string name, long depth)
+        {
+            return new TagEnd()
+            {
+                Name = name,
+                Depth = depth
+            };
         }
 
         private static TagByte GetTagByte(GZipStream stream, string name, long depth)
